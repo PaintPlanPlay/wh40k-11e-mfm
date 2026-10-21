@@ -301,6 +301,16 @@ describe('parseFaction coverage guard — nothing on the page goes unconsumed', 
     expect(() => parseFaction(fixture('necrons-panels.html'), 'necrons', 'Necrons')).not.toThrow();
   });
 
+  it('drops the site footer (legal links) as chrome', () => {
+    // Added by GW on 2026-10-21: a <footer> of legal links on every page.
+    const footer =
+      '<footer><a href="#">Terms of Website Use</a><a href="#">Cookie Notice</a>' +
+      '<div class="ot-sdk-show-settings">Cookies Settings</div><a href="#">Privacy Notice</a></footer>';
+    const withFooter = fixture('necrons.html').replace('</body>', `${footer}</body>`);
+    expect(withFooter).not.toBe(fixture('necrons.html'));
+    expect(() => parseFaction(withFooter, 'necrons', 'Necrons')).not.toThrow();
+  });
+
   it('throws, located, when the page has content no selector captured', () => {
     const injected = fixture('necrons.html').replace(
       '</body>',
