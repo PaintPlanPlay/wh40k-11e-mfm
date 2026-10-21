@@ -462,13 +462,13 @@ function assertFactionCovered($: CheerioAPI, slug: string, name: string, version
     }
   });
 
-  // (c) Page level: drop the parsed cards, the site chrome (header/nav, the cookie
-  // dialog present on browser renders, the open rules panels captured into
+  // (c) Page level: drop the parsed cards, the site chrome (header/nav, the page's own
+  // footer of legal links, the cookie dialog present on browser renders, the open rules panels captured into
   // meta.notes/meta.muster), then assert only known content-area headings (plus the faction
   // name, sub-group/parent-army titles and version) remain. Catches a brand-new
   // top-level section that sits outside any card.
   $(CARD_SELECTOR).remove();
-  $('header, nav, [id^="onetrust"], .onetrust-pc-dark-filter').remove();
+  $('header, nav, body > footer, [id^="onetrust"], .onetrust-pc-dark-filter').remove();
   $('script, style, noscript, svg, head, link').remove();
   // The rules panels (open only) are captured into meta.yaml, not faction data.
   for (const label of Object.values(RULES_PANELS)) findPanel($, label)?.remove();

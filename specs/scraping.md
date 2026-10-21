@@ -99,6 +99,7 @@ The coverage runs on the **de-annotated** DOM, so the change-annotation layer (s
 already gone; an *unrecognised* `UPDATED` note, however, survives `deannotate()` and so is
 caught here as unconsumed — exactly the loud failure we want for a new note variant.
 - **Page level** — after dropping the parsed cards, the site chrome (`header`/`nav`, the
+  page's own `body > footer` of legal links — added by GW on 2026-10-21 —, the
   OneTrust cookie dialog on browser renders, the open rules panels captured into
   `meta.notes`/`meta.muster`), the army-group title (`parent`), the known content-area
   headings (`UNITS`/`DETACHMENTS`/`LEGENDS`), and the rules panels' button labels (shown
