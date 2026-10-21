@@ -338,6 +338,13 @@ workflow folds that file into the issue body, so the issue says *which* factions
 and *why*, not just that something did.
 
 ## Workflow integration
+> **In Paint Plan Play's fork** the workflow differs from what follows: there is no sticky
+> PR, so no `--dates-from` (`main` carries the `firstSeen` stamps). A change is committed
+> straight to `main` (`data: <title>`, the changelog as the commit body), an issue is
+> opened or commented on Paint Plan Play's tracker, one per MFM version, and the Dataset
+> rebuild is triggered. A failure before the commit opens the failure issue there too.
+> There is no Discord announcement. The rest of this section describes upstream.
+
 The scrape GitHub Action:
 1. snapshots the committed `data/` to a temp dir,
 2. exports the open update PR's `data/` (if there is one) to a second temp dir,
