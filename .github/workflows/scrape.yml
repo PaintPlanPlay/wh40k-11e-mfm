@@ -1,18 +1,30 @@
 name: Scrape MFM
 
+# Paint Plan Play's fork: every scrape that finds a change is committed straight to
+# `main`, without a pull request. The review happens downstream, when Paint Plan Play
+# publishes a Dataset release built from this data; this repository only has to be
+# fast and faithful. See README.md.
+#
+# Repository configuration:
+#   secrets.BOT_TOKEN  fine-grained token: Issues (write) on PaintPlanPlay/paintplanplay,
+#                      Actions (write) on PaintPlanPlay/dataset. Without it the data is
+#                      still committed; only the issue and the dataset rebuild are skipped.
+
 on:
   schedule:
-    - cron: '0 16 * * *' # daily 16:00 UTC
+    - cron: '0 4,10,16,22 * * *' # four times a day
   workflow_dispatch: # manual trigger
 
 permissions:
   contents: write
-  pull-requests: write
-  issues: write
 
 concurrency:
   group: scrape
   cancel-in-progress: false
+
+env:
+  TRACKER: PaintPlanPlay/paintplanplay
+  DATASET: PaintPlanPlay/dataset
 
 jobs:
   scrape:
@@ -31,114 +43,77 @@ jobs:
           mkdir -p /tmp/old-data
           cp -r data/. /tmp/old-data/ 2>/dev/null || true
 
-      # The update PR is sticky: its branch is force-pushed on every run. Its data/
-      # already carries the `firstSeen` stamps of the changes it captured, so the
-      # scrape matches against it as well as against main — a run that finds nothing
-      # new re-stamps nothing and so reproduces the branch byte for byte (no
-      # force-push, and the PR keeps its start date), while a later change widens the
-      # reported date range instead of resetting it to today.
-      - name: Fetch the open update PR's dates
-        env:
-          GH_TOKEN: ${{ github.token }}
-          GH_REPO: ${{ github.repository }}
-          BRANCH: mfm/auto-update
-        run: |
-          mkdir -p /tmp/pr-data
-          if [ "$(gh pr view "$BRANCH" --json state --jq .state 2>/dev/null)" = "OPEN" ]; then
-            git fetch --depth=1 origin "+refs/heads/$BRANCH:refs/remotes/origin/$BRANCH"
-            git archive "origin/$BRANCH" data | tar -x -C /tmp/pr-data --strip-components=1
-            echo "Matching dates against the open $BRANCH PR."
-          else
-            echo "No open update PR — dates start fresh."
-          fi
-
+      # No sticky PR here: `main` itself carries the `firstSeen` stamps, so a run that
+      # finds nothing new reproduces `data/` byte for byte and commits nothing.
       - name: Scrape
-        run: pnpm scrape --report /tmp/failures.md --dates-from /tmp/pr-data
-
-      # The announcement is rendered after the PR step (it links to the PR), by which
-      # point create-pull-request has had the working tree. Keep it a copy.
-      - name: Snapshot scraped data
-        run: |
-          mkdir -p /tmp/new-data
-          cp -r data/. /tmp/new-data/
+        run: pnpm scrape --report /tmp/failures.md
 
       - name: Generate changelog
         id: changelog
         run: |
           pnpm exec tsx src/diff.ts /tmp/old-data data --title-file /tmp/title.txt > /tmp/changelog.md
-          echo "title=$(cat /tmp/title.txt)" >> "$GITHUB_OUTPUT"
+          echo "version=$(sed -n 's/^MFM v\([^ ]*\) .*/\1/p' /tmp/title.txt)" >> "$GITHUB_OUTPUT"
           cat /tmp/changelog.md
 
-      # The entry goes into changelog/v<version>.md, and DATA-CHANGELOG.md (the index)
-      # is regenerated; create-pull-request commits both along with data/.
       - name: Update the changelog
         run: pnpm exec tsx scripts/update-data-changelog.ts /tmp/old-data data
 
-      - name: Open pull request on change
-        id: pr
-        uses: peter-evans/create-pull-request@v8
-        with:
-          branch: mfm/auto-update
-          base: main
-          title: ${{ steps.changelog.outputs.title }}
-          body-path: /tmp/changelog.md
-          commit-message: 'data: ${{ steps.changelog.outputs.title }}'
-          labels: mfm-update
-          delete-branch: true
-
-      # One Discord message per MFM update, not per scrape run. The sticky PR is the
-      # update's identity, and the hidden marker on one of its comments is the whole of
-      # the state: no marker means post, a marker means edit that message, so a multi-day
-      # update reads as one announcement whose numbers widen — the way the PR title and
-      # the changelog entry already do. The PR lives exactly as long as the update does,
-      # so once it is merged and its branch deleted the next update starts clean. Delete
-      # the comment to force a repost. See specs/change-tracking.md.
-      #
-      # The marker, rather than create-pull-request's `created`/`updated` output, is what
-      # decides — which makes a failed post self-healing: it leaves no marker, so the next
-      # run posts instead of assuming yesterday succeeded.
-      #
-      # continue-on-error, deliberately: a Discord outage must not fail this job, because
-      # the failure handler below would then open a "the source markup may have drifted"
-      # issue, which would be a lie.
-      - name: Announce on Discord
-        if: steps.pr.outputs.pull-request-number != ''
-        continue-on-error: true
-        env:
-          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
-          GH_TOKEN: ${{ github.token }}
-          GH_REPO: ${{ github.repository }}
-          PR: ${{ steps.pr.outputs.pull-request-number }}
-          REPO_URL: ${{ github.server_url }}/${{ github.repository }}
+      - name: Commit on change
+        id: commit
         run: |
           set -euo pipefail
-          # Only the GitHub half lives here: read the marker, then record a new one. The
-          # post/edit decision is in src/discord.ts, where tests can drive it.
-          id=$(gh pr view "$PR" --json comments --jq '
-            [ .comments[].body
-              | select(test("<!-- discord-message-id: [0-9]+ -->"))
-              | capture("<!-- discord-message-id: (?<id>[0-9]+) -->").id
-            ] | last // ""')
-          # No --changelog-url: at announce time main has yesterday's changelog, not this
-          # update's. The PR body is the changelog, so that is what the embed links to.
-          posted=$(pnpm exec tsx src/discord.ts /tmp/old-data /tmp/new-data --send \
-            --message-id "$id" \
-            --pr-number "$PR" \
-            --pr-url "$REPO_URL/pull/$PR")
-          if [ -n "$posted" ]; then
-            # "<id> [permalink]": $1 drives the next run's edit, $2 is the clickable link
-            # (absent if the webhook wouldn't say which guild and channel it posts to).
-            set -- $posted
-            gh pr comment "$PR" \
-              --body "Announced on Discord: ${2:-link unavailable} <!-- discord-message-id: $1 -->"
+          if [ -z "$(git status --porcelain -- data changelog DATA-CHANGELOG.md)" ]; then
+            echo "No change in the MFM."
+            exit 0
+          fi
+          { echo "data: $(cat /tmp/title.txt)"; echo; cat /tmp/changelog.md; } > /tmp/message.txt
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add data changelog DATA-CHANGELOG.md
+          git commit -q -F /tmp/message.txt
+          git pull -q --rebase origin main
+          git push -q origin HEAD:main
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      # One issue per MFM version on Paint Plan Play's tracker: the first change opens
+      # it, later changes to the same version are added to it as comments.
+      - name: Tell Paint Plan Play
+        if: steps.commit.outputs.sha != ''
+        env:
+          GH_TOKEN: ${{ secrets.BOT_TOKEN }}
+          VERSION: ${{ steps.changelog.outputs.version }}
+          COMMIT_URL: ${{ github.server_url }}/${{ github.repository }}/commit/${{ steps.commit.outputs.sha }}
+        run: |
+          set -euo pipefail
+          if [ -z "$GH_TOKEN" ]; then echo "No BOT_TOKEN: no issue."; exit 0; fi
+          { echo "New MFM data, committed as $COMMIT_URL."; echo; cat /tmp/changelog.md; } > /tmp/body.md
+          issue="MFM v$VERSION — nouvelles données"
+          number=$(gh issue list --repo "$TRACKER" --state open --label mfm-update --json number,title \
+            --jq "[.[] | select(.title == \"$issue\")][0].number // empty")
+          if [ -n "$number" ]; then
+            gh issue comment "$number" --repo "$TRACKER" --body-file /tmp/body.md
+          else
+            gh issue create --repo "$TRACKER" --title "$issue" --label mfm-update --body-file /tmp/body.md
           fi
 
+      - name: Rebuild the Dataset
+        if: steps.commit.outputs.sha != ''
+        env:
+          GH_TOKEN: ${{ secrets.BOT_TOKEN }}
+        run: |
+          if [ -z "$GH_TOKEN" ]; then echo "No BOT_TOKEN: no rebuild."; exit 0; fi
+          gh workflow run update.yml --repo "$DATASET"
+
+      # Only a failure before the commit is a scrape failure: a token problem in the two
+      # steps above must not report the source markup as drifted.
       - name: Open issue on failure
-        if: failure()
+        if: failure() && steps.commit.outcome != 'success'
         uses: actions/github-script@v9
         with:
+          github-token: ${{ secrets.BOT_TOKEN }}
           script: |
             const fs = require('fs');
+            const [owner, repo] = process.env.TRACKER.split('/');
             const run = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
             let details = '';
             try { details = fs.readFileSync('/tmp/failures.md', 'utf8').trim(); } catch {}
@@ -150,12 +125,12 @@ jobs:
               details || '_No per-faction detail was captured — the run likely failed before parsing (network, browser launch, or the index page itself). Check the run log._',
               '',
               '---',
-              'To fix, follow `.agents/playbooks/diagnose-parse.md`. Each block above is the located parser error (including any unconsumed-content report from the completeness check).',
+              `To fix, follow \`.agents/playbooks/diagnose-parse.md\` in ${context.repo.owner}/${context.repo.repo}. Each block above is the located parser error (including any unconsumed-content report from the completeness check).`,
             ].join('\n');
             await github.rest.issues.create({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              title: `Scrape failed (${new Date().toISOString().slice(0, 10)})`,
+              owner,
+              repo,
+              title: `Scrape MFM failed (${new Date().toISOString().slice(0, 10)})`,
               labels: ['scrape-failure'],
               body,
             });
