@@ -614,6 +614,34 @@ describe('naming an update after its MFM version', () => {
   });
 });
 
+describe('two units with the same name in one faction', () => {
+  /**
+   * Space Wolves carries two "Venerable Dreadnought" units in v1.6: the parent's, priced
+   * 1st–2nd / 3rd+, and its own, priced 1st+. Paired by name alone, the first was
+   * compared with the second, and the same snapshot diffed against itself reported a
+   * re-tiering.
+   */
+  const withTwin = (): FactionContent => {
+    const f = necronsContent();
+    const warriors = f.units.find((u) => u.name === 'Necron Warriors');
+    if (!warriors) throw new Error('fixture changed');
+    const twin = structuredClone(warriors);
+    const base = twin.pricing[0];
+    if (!base) throw new Error('fixture changed');
+    twin.pricing = [
+      { ...base, range: '[1,2]' },
+      { ...base, range: '[3,)' },
+    ];
+    f.units.unshift(twin);
+    return f;
+  };
+
+  it('reports nothing when nothing changed', () => {
+    expect(changelog([withTwin()], [withTwin()])).toBe('No changes detected.\n');
+    expect(changelogEntry([withTwin()], [withTwin()], { date: '2026-10-21' })).toBe('');
+  });
+});
+
 describe('re-tiered pricing (a scheme change, not an add plus a remove)', () => {
   /**
    * GW's recurring MFM move: a unit priced over one tier gains a requisition threshold,
