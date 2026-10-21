@@ -62,8 +62,11 @@ jobs:
         id: commit
         run: |
           set -euo pipefail
-          if [ -z "$(git status --porcelain -- data changelog DATA-CHANGELOG.md)" ]; then
+          # `data/` is the record: a changelog that moved while the data did not is a
+          # diff artefact, never a change worth committing.
+          if [ -z "$(git status --porcelain -- data)" ]; then
             echo "No change in the MFM."
+            git checkout -- changelog DATA-CHANGELOG.md
             exit 0
           fi
           { echo "data: $(cat /tmp/title.txt)"; echo; cat /tmp/changelog.md; } > /tmp/message.txt

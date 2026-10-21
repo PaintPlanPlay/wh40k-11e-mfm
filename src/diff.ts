@@ -108,6 +108,20 @@ export function tierLabel(range: string): string {
   return from === to ? ordinal(from) : `${ordinal(from)}–${ordinal(to)}`;
 }
 
+/**
+ * Units keyed by name, a repeated name suffixed by its rank (`name#1`, …), so that two
+ * units sharing a name in one faction — Space Wolves' two Venerable Dreadnoughts — are
+ * each paired with their own counterpart rather than both with the last one.
+ */
+function unitsByKey(f: FactionContent): [string, Unit][] {
+  const seen = new Map<string, number>();
+  return f.units.map((u) => {
+    const rank = seen.get(u.name) ?? 0;
+    seen.set(u.name, rank + 1);
+    return [rank ? `${u.name}#${rank}` : u.name, u];
+  });
+}
+
 /** Unit cost options keyed by `unit · tier · option`. */
 function costRows(f: FactionContent): Map<string, Numeric> {
   const m = new Map<string, Numeric>();
@@ -303,10 +317,10 @@ function computeChanges(before: FactionContent, after: FactionContent): FactionC
 
   // Units whose tier structure changed are described whole, and kept out of the cost
   // diff — every one of their keys moved, so row-by-row it is all noise.
-  const beforeByName = new Map(before.units.map((u) => [u.name, u]));
+  const beforeByKey = new Map(unitsByKey(before));
   const retiered: Retier[] = [];
-  for (const u of after.units) {
-    const p = beforeByName.get(u.name);
+  for (const [key, u] of unitsByKey(after)) {
+    const p = beforeByKey.get(key);
     if (p && tierRanges(p).join('|') !== tierRanges(u).join('|'))
       retiered.push(describeRetier(p, u));
   }
@@ -329,9 +343,8 @@ function computeChanges(before: FactionContent, after: FactionContent): FactionC
 
   // Non-numeric attribute changes on entities present in both snapshots.
   const unitOther: Attr[] = [];
-  const beforeUnits = new Map(before.units.map((u) => [u.name, u]));
-  for (const u of after.units) {
-    const p = beforeUnits.get(u.name);
+  for (const [key, u] of unitsByKey(after)) {
+    const p = beforeByKey.get(key);
     if (!p) continue;
     const note = (text: string) => unitOther.push({ entity: u.name, text: `${u.name} — ${text}` });
     for (const grant of ['leaderTo', 'supportTo'] as const) {
