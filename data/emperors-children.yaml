@@ -1,7 +1,7 @@
 name: Emperor’s Children
 slug: emperors-children
 version: "1.6"
-firstSeen: 2026-10-14
+firstSeen: 2026-10-26
 detachments:
   - name: Carnival Of Excess
     dp: 3
@@ -29,9 +29,9 @@ detachments:
       - PURGE THE FOE
     enhancements:
       - { name: Exalted Patron, points: 15, leaderTo: [ Flawless Blades ] }
-      - { name: Soulstain Made Manifest, points: 15 }
-      - { name: Spiritsliver, points: 20 }
-      - { name: Tears of the Phoenix, points: 25 }
+      - { name: Soulstain Made Manifest, points: 15, leaderTo: [ Flawless Blades ] }
+      - { name: Spiritsliver, points: 20, leaderTo: [ Flawless Blades ] }
+      - { name: Tears of the Phoenix, points: 25, leaderTo: [ Flawless Blades ] }
   - name: Elegant Brutes
     dp: 1
     objectives:

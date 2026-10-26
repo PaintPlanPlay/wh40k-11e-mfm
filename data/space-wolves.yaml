@@ -1,7 +1,7 @@
 name: Space Wolves
 slug: space-wolves
 version: "1.6"
-firstSeen: 2026-10-14
+firstSeen: 2026-10-26
 parent: Space Marines
 detachments:
   - name: Assault Brethren
@@ -103,7 +103,7 @@ detachments:
     objectives:
       - PURGE THE FOE
     enhancements:
-      - { name: Hunter’s Guile, points: 20 }
+      - { name: Hunter’s Guile, points: 20, leaderTo: [ Wulfen, Wulfen With Storm Shields ] }
       - { name: Wolf-Touched, points: 15, leaderTo: [ Wulfen, Wulfen With Storm Shields ] }
   - name: Saga Of The Great Wolf
     dp: 2

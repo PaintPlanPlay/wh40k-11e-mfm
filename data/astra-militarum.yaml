@@ -1,7 +1,7 @@
 name: Astra Militarum
 slug: astra-militarum
 version: "1.6"
-firstSeen: 2026-10-14
+firstSeen: 2026-10-26
 detachments:
   - name: Abhuman Auxiliaries
     dp: 1
@@ -10,7 +10,7 @@ detachments:
     unique: Abhuman
     enhancements:
       - { name: Exemplar of Duty (Upgrade), points: 10, leaderTo: [ Ogryn Squad, Bullgryn Squad ] }
-      - { name: Sharp Eyes (Upgrade), points: 10 }
+      - { name: Sharp Eyes (Upgrade), points: 10, leaderTo: [ Ogryn Squad, Bullgryn Squad ] }
   - name: Armoured Infantry
     dp: 2
     objectives:
@@ -52,9 +52,9 @@ detachments:
     unique: Abhuman
     enhancements:
       - { name: Abhuman Detail, points: 20, leaderTo: [ Ogryn Squad, Bullgryn Squad ] }
-      - { name: Aquilan Eye, points: 20 }
-      - { name: Laud Hailer, points: 10 }
-      - { name: Spec Ops Veteran, points: 15 }
+      - { name: Aquilan Eye, points: 20, leaderTo: [ Ogryn Squad, Bullgryn Squad ] }
+      - { name: Laud Hailer, points: 10, leaderTo: [ Ogryn Squad, Bullgryn Squad ] }
+      - { name: Spec Ops Veteran, points: 15, leaderTo: [ Ogryn Squad, Bullgryn Squad ] }
   - name: Hammer Of The Emperor
     dp: 2
     objectives:

@@ -1,7 +1,7 @@
 name: Thousand Sons
 slug: thousand-sons
 version: "1.6"
-firstSeen: 2026-10-14
+firstSeen: 2026-10-26
 detachments:
   - name: Changehost Of Deceit
     dp: 2
@@ -80,9 +80,9 @@ detachments:
     unique: Mutant
     enhancements:
       - { name: Bray Lord, points: 15, leaderTo: [ Tzaangors ] }
-      - { name: Diamond of Distortion, points: 20 }
-      - { name: Flowing Flesh, points: 10 }
-      - { name: Warpmeld Dagger, points: 10 }
+      - { name: Diamond of Distortion, points: 20, leaderTo: [ Tzaangors ] }
+      - { name: Flowing Flesh, points: 10, leaderTo: [ Tzaangors ] }
+      - { name: Warpmeld Dagger, points: 10, leaderTo: [ Tzaangors ] }
 units:
   - name: Ahriman
     pricing:

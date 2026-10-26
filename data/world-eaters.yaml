@@ -1,7 +1,7 @@
 name: World Eaters
 slug: world-eaters
 version: "1.6"
-firstSeen: 2026-10-14
+firstSeen: 2026-10-26
 detachments:
   - name: Berzerker Warband
     dp: 2
@@ -31,10 +31,10 @@ detachments:
     objectives:
       - PRIORITY ASSETS
     enhancements:
-      - { name: Brazen Form, points: 25 }
+      - { name: Brazen Form, points: 25, leaderTo: [ Jakhals, Goremongers ] }
       - { name: Butcher Lord, points: 10, leaderTo: [ Jakhals, Goremongers ] }
-      - { name: Chosen of the Blood God, points: 15 }
-      - { name: Strategic Slaughter, points: 20 }
+      - { name: Chosen of the Blood God, points: 15, leaderTo: [ Jakhals, Goremongers ] }
+      - { name: Strategic Slaughter, points: 20, leaderTo: [ Jakhals, Goremongers ] }
   - name: Goretrack Onslaught
     dp: 2
     objectives:
@@ -49,10 +49,10 @@ detachments:
     objectives:
       - RECONNAISSANCE
     enhancements:
-      - { name: Blade of Endless Bloodshed, points: 30 }
-      - { name: Blood-Forged Armour, points: 20 }
+      - { name: Blade of Endless Bloodshed, points: 30, leaderTo: [ Bloodcrushers, Flesh Hounds ] }
+      - { name: Blood-Forged Armour, points: 20, leaderTo: [ Bloodcrushers, Flesh Hounds ] }
       - { name: Disciple of Khorne, points: 15, leaderTo: [ Bloodcrushers, Flesh Hounds ] }
-      - { name: Icon of War, points: 25 }
+      - { name: Icon of War, points: 25, leaderTo: [ Bloodcrushers, Flesh Hounds ] }
   - name: Possessed Slaughterband
     dp: 2
     objectives:

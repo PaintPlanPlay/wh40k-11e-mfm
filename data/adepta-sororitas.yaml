@@ -1,7 +1,7 @@
 name: Adepta Sororitas
 slug: adepta-sororitas
 version: "1.6"
-firstSeen: 2026-10-14
+firstSeen: 2026-10-26
 detachments:
   - name: Army Of Faith
     dp: 2
@@ -54,9 +54,9 @@ detachments:
       - PURGE THE FOE
     enhancements:
       - { name: Catechism of Divine Penitence, points: 15, leaderTo: [ Repentia Squad ] }
-      - { name: Psalm of Righteous Judgement, points: 20 }
-      - { name: Refrain of Enduring Faith, points: 15 }
-      - { name: Verse of Holy Piety, points: 15 }
+      - { name: Psalm of Righteous Judgement, points: 20, leaderTo: [ Repentia Squad ] }
+      - { name: Refrain of Enduring Faith, points: 15, leaderTo: [ Repentia Squad ] }
+      - { name: Verse of Holy Piety, points: 15, leaderTo: [ Repentia Squad ] }
   - name: Sacred Champions
     dp: 1
     objectives:

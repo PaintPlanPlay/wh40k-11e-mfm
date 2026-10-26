@@ -1,7 +1,7 @@
 name: Orks
 slug: orks
 version: "1.6"
-firstSeen: 2026-10-14
+firstSeen: 2026-10-26
 detachments:
   - name: Blitz Brigade
     dp: 1
@@ -91,7 +91,7 @@ detachments:
       - TAKE AND HOLD
     enhancements:
       - { name: Kill Kommanda, points: 20, leaderTo: [ Kommandos ] }
-      - { name: Throat-slittas (Upgrade), points: 15 }
+      - { name: Throat-slittas (Upgrade), points: 15, leaderTo: [ Kommandos ] }
   - name: War Horde
     dp: 3
     objectives:
@@ -108,7 +108,7 @@ detachments:
       - PRIORITY ASSETS
     enhancements:
       - { name: Kaptin's Hat, points: 25, leaderTo: [ Flash Gitz ] }
-      - { name: Supa-snazz Dakka (Upgrade), points: 25 }
+      - { name: Supa-snazz Dakka (Upgrade), points: 25, leaderTo: [ Flash Gitz ] }
   - name: Wurrband
     dp: 1
     objectives:
